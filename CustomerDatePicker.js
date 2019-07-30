@@ -15,11 +15,9 @@ let weekName = ["星期一","星期二","星期三","星期四","星期五","星
 @Form.create()
 class CustomerDatePicker extends Component {
 
-  refCb = (dom) =>{
+  refCb = () =>{
     const {initData} = this.props;
     const _this = this;
-    document.οncοntextmenu=function(){return false;};
-    document.onselectstart=function(){return false;};
     const wId = "w";
     let startX = 0;
     let startY = 0;
@@ -38,151 +36,158 @@ class CustomerDatePicker extends Component {
     let retcTop = "0px";
     let retcHeight = "0px";
     let retcWidth = "0px";
+    // 禁止右键，禁止文本选择
+    document.οncοntextmenu=function(){return false;};
+    document.onselectstart=function(){return false;};
 
-    let _$ = function(id){
+    const _$ = (id) => {
       return document.getElementById(id);
     }
 
-    $("#date-num").empty()
-    for(var i = 0;i<24;i++){
-      var a = document.createElement("div");
+    const bindEvent = function(dom, eventName, listener){
+      if(dom.attachEvent) {
+        dom.attachEvent(`on${eventName}`, listener);
+      } else {
+        dom.addEventListener(eventName, listener);
+      }
+    }
+
+    $("#date-num").empty();
+    $("#mydiv").empty();
+
+    // 绘制0-23小时
+    for(let i = 0;i<24;i++){
+      let a = document.createElement("div");
       a.className = style["date-num"];
       a.innerHTML = i;
       $("#date-num").append(a)
     }
 
-    $("#mydiv").empty()
-    for(var i = 0;i<7;i++){
-      var a = document.createElement("div");
+    // 绘制7*48个格子
+    for(let i = 0;i<7;i++){
+      let a = document.createElement("div");
       a.className = style.line;
-
-      for(var j = 0;j<48;j++){
-        var b = document.createElement("div");
+      for(let j = 0;j<48;j++){
+        let b = document.createElement("div");
         b.className = style.cell;
         a.appendChild(b)
       }
       $("#mydiv").append(a)
     }
-    for(var i = 0;i<7;i++){
-      let item = initData[i];
-      for(var j = 0;j<48;j++){
-        if(item && item.length>0 && item.indexOf(j)>-1){
-          $('#mydiv').children().eq(i).children().eq(j).addClass(style.active)
+
+    // 初始化数据
+    if(initData && initData.length>0){
+      for(let i = 0;i<7;i++){
+        const item = initData[i];
+        for(let j = 0;j<48;j++){
+          if(item && item.length>0 && item.indexOf(j)>-1){
+            $('#mydiv').children().eq(i).children().eq(j).addClass(style.active)
+          }
         }
       }
     }
-
-    var bindEvent = function(dom, eventName, listener){
-      if(dom.attachEvent) {
-        dom.attachEvent('on'+eventName, listener);
-      } else {
-        dom.addEventListener(eventName, listener);
-      }
-    }
-    var mydiv = document.getElementById('mydiv');
-
-    bindEvent(mydiv, 'mousedown', function(e){
+    const mydiv = document.getElementById('mydiv');
+    bindEvent(mydiv, 'mousedown', (e)=>{
       flag = true;
       $("#tooltipBox").remove();
       try{
-        var evt = window.event || e;
-        var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
-        var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
+        const evt = window.event || e;
+        const tmp = mydiv.getBoundingClientRect();
+
+        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+        const scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
         startX = evt.clientX + scrollLeft;
         startY = evt.clientY + scrollTop;
-        var tmp = mydiv.getBoundingClientRect();
-
         startPointX = startX-scrollLeft-tmp.left;
         startPointY = startY-scrollTop-tmp.top;
         index++;
-        var div = document.createElement("div");
+        const div = document.createElement("div");
         div.id = wId + index;
         div.className = "tmpDiv";
         div.style.position = "absolute";
-        div.style.left = startX + "px";
-        div.style.top = startY + "px";
+        div.style.left = `${startX}px`;
+        div.style.top = `${startY}px`;
         div.style.border = "1px dashed #009CFF";
         document.body.appendChild(div);
       }catch(e){
-        //alert(e);
+        throw new Error(e)
       }
+    });
 
-    })
-    var customContainer = document.getElementById('customContainer');
-    bindEvent(customContainer, 'mouseout', function(e){
-      $("#tooltipBox") && $("#tooltipBox").remove();
-    })
-    bindEvent(mydiv, 'mousemove', function(e){
+    const customContainer = document.getElementById('customContainer');
+    bindEvent(customContainer, 'mouseout', ()=>{
+      if($("#tooltipBox")){
+        $("#tooltipBox").remove();
+      }
+    });
+
+    bindEvent(mydiv, 'mousemove', (e)=>{
       $("#tooltipBox").remove();
+      const tmp = mydiv.getBoundingClientRect();
+      const evt = window.event || e;
       if(flag){
         try{
-          var mydiv = document.getElementById('mydiv');
-          var tmp = mydiv.getBoundingClientRect();
-          var evt = window.event || e;
-          var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
-          var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
-          retcLeft = (startX - evt.clientX - scrollLeft > 0 ? evt.clientX + scrollLeft : startX) + "px";
-          retcTop = (startY - evt.clientY - scrollTop > 0 ? evt.clientY + scrollTop : startY) + "px";
-          retcHeight = Math.abs(startY - evt.clientY - scrollTop) + "px";
-          retcWidth = Math.abs(startX - evt.clientX - scrollLeft) + "px";
+          const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+          const scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
+          retcLeft = `${(startX - evt.clientX - scrollLeft > 0 ? evt.clientX + scrollLeft : startX)}px`;
+          retcTop = `${(startY - evt.clientY - scrollTop > 0 ? evt.clientY + scrollTop : startY)}px`;
+          retcHeight = `${Math.abs(startY - evt.clientY - scrollTop)}px`;
+          retcWidth = `${Math.abs(startX - evt.clientX - scrollLeft)}px`;
 
           endPointX = evt.clientX  - tmp.left;
           endPointY = evt.clientY  - tmp.top;
-          _$(wId + index).style.left = retcLeft;
-          _$(wId + index).style.top = retcTop;
-          _$(wId + index).style.width = retcWidth;
-          _$(wId + index).style.height = retcHeight;
+          if(_$(wId + index)){
+            _$(wId + index).style.left = retcLeft;
+            _$(wId + index).style.top = retcTop;
+            _$(wId + index).style.width = retcWidth;
+            _$(wId + index).style.height = retcHeight;
+          }
         }catch(e){
-          //alert(e);
+          throw new Error(e)
         }
       }
       else{
-        var mydiv = document.getElementById('mydiv');
-        var tmp = mydiv.getBoundingClientRect();
-        var evt = window.event || e;
-        var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
-        var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
-        // if( tmpX === evt.clientX + scrollLeft && tmpY === evt.clientY + scrollTop){
-        // 	return
-        // }
-        var tmpX = evt.clientX + scrollLeft;
-        var tmpY = evt.clientY + scrollTop;
+        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+        const scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
+        const tmpX = evt.clientX + scrollLeft;
+        const tmpY = evt.clientY + scrollTop;
 
         endPointX = evt.clientX  - tmp.left;
         endPointY = evt.clientY  - tmp.top;
         let indexX = null;
         let indexY = null;
-        for(var i = 1;i<49;i++){
+        // 获取鼠标悬浮的X,Y坐标
+        for(let i = 0;i<48;i++){
           if(endPointX<i*cellWidth){
             indexX = i;
             break;
           }
         }
 
-        for(var j = 1;j<8;j++){
+        for(let j = 0;j<7;j++){
           if(endPointY<j*cellHeight){
             indexY = j;
             break;
           }
         }
-        var yName = weekName[indexY-1];
-        var aa = Math.floor((indexX-1) / 2);
-        var bb = (indexX-1) % 2 ;
-        var xName = bb===0?(aa+":00 - " + aa+":30"):(aa+":30 - " + (aa+1)+":00")
+        const yName = weekName[indexY];
+        const aa = Math.floor(indexX / 2);
+        const bb = indexX % 2;
+        const xName = bb===0?(`${aa}:00 - ${aa}:30`):(`${aa}:30 - ${(aa+1)}:00`);
 
-        var div = document.createElement("div");
+        const div = document.createElement("div");
         div.id = "tooltipBox";
-        div.innerHTML = yName + " "+xName;
+        div.innerHTML = `${yName}${xName}`;
         div.style.position = "absolute";
-        div.style.left = tmpX+10 + "px";
-        div.style.top = tmpY+10 + "px";
+        div.style.left = `${tmpX+10}px`;
+        div.style.top =  `${tmpY+10}px`;
         div.style.padding = "5px";
         div.style.border = "1px solid #aaa";
         div.style.background = "#fff";
         document.body.appendChild(div);
       }
     })
-    document.onmouseup = function(){
+    document.onmouseup = ()=>{
       flag = false;
       $(".tmpDiv").remove();
       if(_$(wId + index)){
@@ -193,14 +198,14 @@ class CustomerDatePicker extends Component {
       }
 
       if(endPointX ===0 && endPointY ===0 ){
-        for(var i = 1;i<49;i++){
+        for(let i = 1;i<49;i++){
           if(startPointX<i*cellWidth){
             StartAreaX = i;
             break;
           }
         }
 
-        for(var j = 1;j<8;j++){
+        for(let j = 1;j<8;j++){
           if(startPointY<j*cellHeight){
             StartAreaY = j;
             break;
@@ -208,7 +213,7 @@ class CustomerDatePicker extends Component {
         }
         $('#mydiv').children().eq(StartAreaY-1).children().eq(StartAreaX-1).toggleClass(style.active);
 
-        let weekdays = {
+        const weekdays = {
           "monday": [],
           "tuesday": [],
           "wednesday": [],
@@ -217,8 +222,8 @@ class CustomerDatePicker extends Component {
           "saturday": [],
           "sunday": []
         }
-        for(var m = 0;m<8;m++){
-          for(var n = 0;n<48;n++){
+        for(let m = 0;m<8;m++){
+          for(let n = 0;n<48;n++){
             if($('#mydiv').children().eq(m).children().eq(n).hasClass(style.active)){
               switch(m){
                 case 0:
@@ -263,44 +268,44 @@ class CustomerDatePicker extends Component {
       }
       try{
         if( startPointX && startPointY && endPointX && endPointY){
-          for(var i = 1;i<49;i++){
+          for(let i = 1;i<49;i++){
             if(startPointX<i*cellWidth){
               StartAreaX = i;
               break;
             }
           }
 
-          for(var j = 1;j<8;j++){
+          for(let j = 1;j<8;j++){
             if(startPointY<j*cellHeight){
               StartAreaY = j;
               break;
             }
           }
 
-          for(var i = 1;i<49;i++){
+          for(let i = 1;i<49;i++){
             if(endPointX<i*cellWidth){
               EndAreaX = i;
               break;
             }
           }
 
-          for(var j = 1;j<8;j++){
+          for(let j = 1;j<8;j++){
             if(endPointY<j*cellHeight){
               EndAreaY = j;
               break;
             }
           }
-          var tmpX1 = Math.min(StartAreaX,EndAreaX);
-          var tmpX2 = Math.max(StartAreaX,EndAreaX);
-          var tmpY1 = Math.min(StartAreaY,EndAreaY);
-          var tmpY2 = Math.max(StartAreaY,EndAreaY);
+          const tmpX1 = Math.min(StartAreaX,EndAreaX);
+          const tmpX2 = Math.max(StartAreaX,EndAreaX);
+          const tmpY1 = Math.min(StartAreaY,EndAreaY);
+          const tmpY2 = Math.max(StartAreaY,EndAreaY);
 
-          for(var m = tmpX1-1;m<tmpX2;m++){
-            for(var n = tmpY1-1;n<tmpY2;n++){
+          for(let m = tmpX1-1;m<tmpX2;m++){
+            for(let n = tmpY1-1;n<tmpY2;n++){
               $('#mydiv').children().eq(n).children().eq(m).toggleClass(style.active)
             }
           }
-          let weekdays = {
+          const weekdays = {
             "monday": [],
             "tuesday": [],
             "wednesday": [],
@@ -309,8 +314,8 @@ class CustomerDatePicker extends Component {
             "saturday": [],
             "sunday": []
           }
-          for(var m = 0;m<8;m++){
-            for(var n = 0;n<48;n++){
+          for(let m = 0;m<8;m++){
+            for(let n = 0;n<48;n++){
               if($('#mydiv').children().eq(m).children().eq(n).hasClass(style.active)){
                 switch(m){
                   case 0:
@@ -354,17 +359,19 @@ class CustomerDatePicker extends Component {
           EndAreaY = null;
         }
       }catch(e){
-        //alert(e);
+        throw new Error(e)
       }
     }
 
-    $("#date-clear-btn").on('click',function(){
-      for(var i = 0;i<7;i++){
-        for(var j = 0;j<48;j++){
+    $("#date-clear-btn").on('click',()=>{
+      for(let i = 0;i<7;i++){
+        for(let j = 0;j<48;j++){
           $('#mydiv').children().eq(i).children().eq(j).removeClass(style.active)
         }
       }
-      $("#tooltipBox") && $("#tooltipBox").remove();
+      if($("#tooltipBox")){
+        $("#tooltipBox").remove();
+      }
       if(_this.props.changeWeekPeriod)
       {
         _this.props.changeWeekPeriod(null)
