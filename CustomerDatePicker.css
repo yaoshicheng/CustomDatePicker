@@ -1,0 +1,70 @@
+.mydiv{
+  width: 720px;
+  height: 224px;
+  margin-top: 10px;
+}
+.line{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.cell{
+  height: 30px;
+  width: 15px;
+  border: 1px solid #E9E9E9;
+  border-bottom: none;
+  border-right: none;
+}
+.active{
+  background: #009CFF;
+}
+.container{
+  display: flex;
+  flex-direction: column;
+  width: 801px;
+  height: 315px;
+  justify-content: flex-start;
+  border: 1px solid #E9E9E9;
+  border-top:none;
+}
+.main-table{
+  width: 801px;
+  height: 270px;
+  display: flex;
+  justify-content: flex-start;
+  border-bottom: 1px solid #ccc;
+}
+.date-desc{
+  text-align: center;
+  height: 60px;
+  width: 80px;
+  line-height: 60px;
+  border:1px solid #E9E9E9;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+.date-num{
+  width:30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  border:1px solid #E9E9E9;
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+}
+.date-name{
+  height: 30px;
+  line-height: 28px;
+  border-top: 1px solid #E9E9E9;
+  text-align: center;
+  /*border-right: none;*/
+  /*border-bottom: none;*/
+}
+.aa{
+  display: flex;height: 30px;line-height: 30px;
+}
+.bb{
+  width: 50%;text-align: center;border:1px solid #E9E9E9;border-right: none;
+}
