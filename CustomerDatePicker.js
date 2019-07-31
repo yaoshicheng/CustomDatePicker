@@ -5,7 +5,27 @@ import $ from "jquery";
 import  * as style from './CustomerDatePicker.css';
 
 let index = 0;
-let weekName = ["星期一","星期二","星期三","星期四","星期五","星期六","星期日"];
+const weekName = ["星期一","星期二","星期三","星期四","星期五","星期六","星期日"];
+const wId = "w";
+let flag = false;
+let startX = 0;let startY = 0;
+const cellWidth=15;const cellHeight=30;
+let startPointX = 0;let startPointY = 0;let endPointX = 0;let endPointY = 0;
+let StartAreaX = null;let StartAreaY = null;let EndAreaX = null;let EndAreaY = null;
+let retcLeft = "0px";let retcTop = "0px";let retcHeight = "0px";let retcWidth = "0px";
+// 禁止右键，禁止文本选择
+document.οncοntextmenu=function(){return false;};
+document.onselectstart=function(){return false;};
+
+const bindEvent = (dom, eventName, listener)=>{
+  if(dom.attachEvent) {
+    dom.attachEvent(`on${eventName}`, listener);
+  } else {
+    dom.addEventListener(eventName, listener);
+  }
+};
+
+const jq = (id)=>document.getElementById(id);
 
 @connect(({ loading,adsCast }) => ({
   adsCast,
@@ -14,66 +34,33 @@ let weekName = ["星期一","星期二","星期三","星期四","星期五","星
 }))
 @Form.create()
 class CustomerDatePicker extends Component {
+  componentDidMount() {
+    this.handleInit();
+    this.handleClear();
+  }
 
-  refCb = () =>{
-    const {initData} = this.props;
-    const _this = this;
-    const wId = "w";
-    let startX = 0;
-    let startY = 0;
-    let flag = false;
-    const cellWidth=15;
-    const cellHeight=30;
-    let startPointX = 0;
-    let startPointY = 0;
-    let endPointX = 0;
-    let endPointY = 0;
-    let StartAreaX = null;
-    let StartAreaY = null;
-    let EndAreaX = null;
-    let EndAreaY = null;
-    let retcLeft = "0px";
-    let retcTop = "0px";
-    let retcHeight = "0px";
-    let retcWidth = "0px";
-    // 禁止右键，禁止文本选择
-    document.οncοntextmenu=function(){return false;};
-    document.onselectstart=function(){return false;};
-
-    const _$ = (id) => {
-      return document.getElementById(id);
-    }
-
-    const bindEvent = function(dom, eventName, listener){
-      if(dom.attachEvent) {
-        dom.attachEvent(`on${eventName}`, listener);
-      } else {
-        dom.addEventListener(eventName, listener);
-      }
-    }
-
-    $("#date-num").empty();
-    $("#mydiv").empty();
-
+  handleInit = ()=>{
     // 绘制0-23小时
     for(let i = 0;i<24;i++){
-      let a = document.createElement("div");
+      const a = document.createElement("div");
       a.className = style["date-num"];
       a.innerHTML = i;
       $("#date-num").append(a)
     }
-
     // 绘制7*48个格子
     for(let i = 0;i<7;i++){
-      let a = document.createElement("div");
+      const a = document.createElement("div");
       a.className = style.line;
       for(let j = 0;j<48;j++){
-        let b = document.createElement("div");
+        const b = document.createElement("div");
         b.className = style.cell;
         a.appendChild(b)
       }
       $("#mydiv").append(a)
     }
+
+    const {initData} = this.props;
+    const _this = this;
 
     // 初始化数据
     if(initData && initData.length>0){
@@ -103,7 +90,7 @@ class CustomerDatePicker extends Component {
         index++;
         const div = document.createElement("div");
         div.id = wId + index;
-        div.className = "tmpDiv";
+        // div.className = "tmpDiv";
         div.style.position = "absolute";
         div.style.left = `${startX}px`;
         div.style.top = `${startY}px`;
@@ -133,14 +120,13 @@ class CustomerDatePicker extends Component {
           retcTop = `${(startY - evt.clientY - scrollTop > 0 ? evt.clientY + scrollTop : startY)}px`;
           retcHeight = `${Math.abs(startY - evt.clientY - scrollTop)}px`;
           retcWidth = `${Math.abs(startX - evt.clientX - scrollLeft)}px`;
-
           endPointX = evt.clientX  - tmp.left;
           endPointY = evt.clientY  - tmp.top;
-          if(_$(wId + index)){
-            _$(wId + index).style.left = retcLeft;
-            _$(wId + index).style.top = retcTop;
-            _$(wId + index).style.width = retcWidth;
-            _$(wId + index).style.height = retcHeight;
+          if(jq(wId + index)){
+            jq(wId + index).style.left = retcLeft;
+            jq(wId + index).style.top = retcTop;
+            jq(wId + index).style.width = retcWidth;
+            jq(wId + index).style.height = retcHeight;
           }
         }catch(e){
           throw new Error(e)
@@ -151,7 +137,6 @@ class CustomerDatePicker extends Component {
         const scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
         const tmpX = evt.clientX + scrollLeft;
         const tmpY = evt.clientY + scrollTop;
-
         endPointX = evt.clientX  - tmp.left;
         endPointY = evt.clientY  - tmp.top;
         let indexX = null;
@@ -163,18 +148,16 @@ class CustomerDatePicker extends Component {
             break;
           }
         }
-
-        for(let j = 0;j<7;j++){
+        for(let j = 0;j<8;j++){
           if(endPointY<j*cellHeight){
             indexY = j;
             break;
           }
         }
-        const yName = weekName[indexY];
+        const yName = weekName[indexY-1];
         const aa = Math.floor(indexX / 2);
         const bb = indexX % 2;
         const xName = bb===0?(`${aa}:00 - ${aa}:30`):(`${aa}:30 - ${(aa+1)}:00`);
-
         const div = document.createElement("div");
         div.id = "tooltipBox";
         div.innerHTML = `${yName}${xName}`;
@@ -186,17 +169,14 @@ class CustomerDatePicker extends Component {
         div.style.background = "#fff";
         document.body.appendChild(div);
       }
-    })
+    });
+
     document.onmouseup = ()=>{
       flag = false;
-      $(".tmpDiv").remove();
-      if(_$(wId + index)){
-        document.body.removeChild(_$(wId + index));
+      if(jq(wId + index)){
+        document.body.removeChild(jq(wId + index));
       }
-      if(startPointX ===0 && startPointY === 0){
-        return
-      }
-
+      if(startPointX ===0 && startPointY === 0) return;
       if(endPointX ===0 && endPointY ===0 ){
         for(let i = 1;i<49;i++){
           if(startPointX<i*cellWidth){
@@ -204,7 +184,6 @@ class CustomerDatePicker extends Component {
             break;
           }
         }
-
         for(let j = 1;j<8;j++){
           if(startPointY<j*cellHeight){
             StartAreaY = j;
@@ -212,170 +191,107 @@ class CustomerDatePicker extends Component {
           }
         }
         $('#mydiv').children().eq(StartAreaY-1).children().eq(StartAreaX-1).toggleClass(style.active);
-
-        const weekdays = {
-          "monday": [],
-          "tuesday": [],
-          "wednesday": [],
-          "thursday": [],
-          "friday": [],
-          "saturday": [],
-          "sunday": []
-        }
-        for(let m = 0;m<8;m++){
-          for(let n = 0;n<48;n++){
-            if($('#mydiv').children().eq(m).children().eq(n).hasClass(style.active)){
-              switch(m){
-                case 0:
-                  weekdays["monday"].push(n);
-                  break;
-                case 1:
-                  weekdays["tuesday"].push(n);
-                  break;
-                case 2:
-                  weekdays["wednesday"].push(n);
-                  break;
-                case 3:
-                  weekdays["thursday"].push(n);
-                  break;
-                case 4:
-                  weekdays["friday"].push(n);
-                  break;
-                case 5:
-                  weekdays["saturday"].push(n);
-                  break;
-                case 6:
-                  weekdays["sunday"].push(n);
-                  break;
-                default:
-                  break;
-              }
-            }
-          }
-        }
-
-        if(_this.props.changeWeekPeriod)
-        {
-          _this.props.changeWeekPeriod(weekdays)
-        }
-        startPointX = 0;startPointY = 0;
-        endPointX = 0;endPointY = 0;
-        StartAreaX = null;
-        StartAreaY = null;
-        EndAreaX = null;
-        EndAreaY = null;
+        this.handleChangeDatePeriod();
+        this.handleClearDefaultValue();
         return
       }
       try{
         if( startPointX && startPointY && endPointX && endPointY){
           for(let i = 1;i<49;i++){
-            if(startPointX<i*cellWidth){
+            if(!StartAreaX && startPointX<i*cellWidth){
               StartAreaX = i;
-              break;
             }
-          }
-
-          for(let j = 1;j<8;j++){
-            if(startPointY<j*cellHeight){
-              StartAreaY = j;
-              break;
-            }
-          }
-
-          for(let i = 1;i<49;i++){
-            if(endPointX<i*cellWidth){
+            if(!EndAreaX && endPointX<i*cellWidth){
               EndAreaX = i;
-              break;
             }
           }
-
           for(let j = 1;j<8;j++){
-            if(endPointY<j*cellHeight){
+            if( !StartAreaY&& startPointY<j*cellHeight){
+              StartAreaY = j;
+            }
+            if( !EndAreaY&& endPointY<j*cellHeight){
               EndAreaY = j;
-              break;
             }
           }
           const tmpX1 = Math.min(StartAreaX,EndAreaX);
           const tmpX2 = Math.max(StartAreaX,EndAreaX);
           const tmpY1 = Math.min(StartAreaY,EndAreaY);
           const tmpY2 = Math.max(StartAreaY,EndAreaY);
-
           for(let m = tmpX1-1;m<tmpX2;m++){
             for(let n = tmpY1-1;n<tmpY2;n++){
               $('#mydiv').children().eq(n).children().eq(m).toggleClass(style.active)
             }
           }
-          const weekdays = {
-            "monday": [],
-            "tuesday": [],
-            "wednesday": [],
-            "thursday": [],
-            "friday": [],
-            "saturday": [],
-            "sunday": []
-          }
-          for(let m = 0;m<8;m++){
-            for(let n = 0;n<48;n++){
-              if($('#mydiv').children().eq(m).children().eq(n).hasClass(style.active)){
-                switch(m){
-                  case 0:
-                    weekdays["monday"].push(n);
-                    break;
-                  case 1:
-                    weekdays["tuesday"].push(n);
-                    break;
-                  case 2:
-                    weekdays["wednesday"].push(n);
-                    break;
-                  case 3:
-                    weekdays["thursday"].push(n);
-                    break;
-                  case 4:
-                    weekdays["friday"].push(n);
-                    break;
-                  case 5:
-                    weekdays["saturday"].push(n);
-                    break;
-                  case 6:
-                    weekdays["sunday"].push(n);
-                    break;
-                  default:
-                    break;
-                }
-              }
-            }
-          }
-
-          if(_this.props.changeWeekPeriod)
-          {
-            _this.props.changeWeekPeriod(weekdays)
-          }
-
-          startPointX = 0;startPointY = 0;
-          endPointX = 0;endPointY = 0;
-          StartAreaX = null;
-          StartAreaY = null;
-          EndAreaX = null;
-          EndAreaY = null;
+          this.handleChangeDatePeriod();
+          this.handleClearDefaultValue();
         }
       }catch(e){
         throw new Error(e)
       }
     }
+  };
 
+  handleChangeDatePeriod =()=>{
+    const {changeWeekPeriod} = this.props;
+    const weekdays = {
+      "monday": [],
+      "tuesday": [],
+      "wednesday": [],
+      "thursday": [],
+      "friday": [],
+      "saturday": [],
+      "sunday": []
+    };
+    for(let m = 0;m<8;m++){
+      for(let n = 0;n<48;n++){
+        if($('#mydiv').children().eq(m).children().eq(n).hasClass(style.active)){
+          switch(m){
+            case 0:
+              weekdays["monday"].push(n);
+              break;
+            case 1:
+              weekdays["tuesday"].push(n);
+              break;
+            case 2:
+              weekdays["wednesday"].push(n);
+              break;
+            case 3:
+              weekdays["thursday"].push(n);
+              break;
+            case 4:
+              weekdays["friday"].push(n);
+              break;
+            case 5:
+              weekdays["saturday"].push(n);
+              break;
+            case 6:
+              weekdays["sunday"].push(n);
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+    if(changeWeekPeriod) {
+      changeWeekPeriod(weekdays)
+    }
+  };
+
+  handleClearDefaultValue=()=>{
+    startPointX = 0;startPointY = 0;endPointX = 0;endPointY = 0;
+    StartAreaX = null;StartAreaY = null;EndAreaX = null;EndAreaY = null;
+  };
+
+  handleClear=()=>{
+    const {changeWeekPeriod} = this.props;
     $("#date-clear-btn").on('click',()=>{
       for(let i = 0;i<7;i++){
         for(let j = 0;j<48;j++){
           $('#mydiv').children().eq(i).children().eq(j).removeClass(style.active)
         }
       }
-      if($("#tooltipBox")){
-        $("#tooltipBox").remove();
-      }
-      if(_this.props.changeWeekPeriod)
-      {
-        _this.props.changeWeekPeriod(null)
-      }
+      if(changeWeekPeriod) changeWeekPeriod(null)
     });
   };
 
@@ -398,7 +314,6 @@ class CustomerDatePicker extends Component {
               <div className={style.bb}>00:00-12:00</div>
               <div className={style.bb}>12:00-24:00</div>
             </div>
-
             <div id="date-num" style={{display: "flex",height: "20px"}} />
             <div className={style.mydiv} id="mydiv" />
           </div>
