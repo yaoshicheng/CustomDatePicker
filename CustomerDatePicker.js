@@ -297,7 +297,7 @@ class CustomerDatePicker extends Component {
 
   render() {
     return (
-      <div id="customContainer" className={style.container} style={{background:"#fff"}} ref={(dom)=>this.refCb(dom)}>
+      <div id="customContainer" className={style.container} style={{background:"#fff"}}>
         <div className={style["main-table"]}>
           <div className={style["left-con"]}>
             <div className={style["date-desc"]}>星期\时间</div>
